@@ -20,7 +20,7 @@ POST :
    "exclusivePlan" : false,
    "saldo" : 1000.0,
    "numeroConta": 12313213,
-   "dataNascimento" : "2018-03-29"
+   "dataNascimento" : "2001-03-29"
 }
 
 PATCH : 
