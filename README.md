@@ -1,8 +1,8 @@
 # Aplicação Desenvolvida Utilizando JAVA 11 com Spring Boot na versão 2.3.4.
 
-# BANCO DE DADOS : H2 ou MYSQL (alterar no application.properties)
+BANCO DE DADOS : H2 ou MYSQL (alterar no application.properties)
 
-# Para rodar o projeto basta utilizar o comando : spring-boot:run
+Para rodar o projeto basta utilizar o comando : spring-boot:run
 
 ENDPOINTS :
 
