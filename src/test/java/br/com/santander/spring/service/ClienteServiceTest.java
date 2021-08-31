@@ -4,12 +4,17 @@ import br.com.santander.spring.model.Cliente;
 import br.com.santander.spring.model.Transacao;
 import br.com.santander.spring.repository.ClienteRepository;
 import br.com.santander.spring.repository.TransacaoRepository;
+
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -26,8 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.powermock.api.mockito.PowerMockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(ClienteService.class)
+@RunWith(MockitoJUnitRunner.class)
 public class ClienteServiceTest {
 
     @Mock
@@ -38,6 +42,7 @@ public class ClienteServiceTest {
 
     @InjectMocks
     private ClienteService clienteService;
+
 
     private Cliente clienteBuilder() {
         return new Cliente(1, "Santander", false, 1000.00, 2508202, new Date());
@@ -71,7 +76,7 @@ public class ClienteServiceTest {
 
         Page<Cliente> clientePage = new PageImpl<>(clientes);
 
-        when(clienteRepository.findAll(isA(Pageable.class))).thenReturn(clientePage);
+       when(clienteRepository.findAll(isA(Pageable.class))).thenReturn(clientePage);
 
         assertEquals(clienteService.listarClientes(pageable).getContent().get(1).getNome(), "Capgemini");
 

@@ -95,16 +95,16 @@ public class ClienteService {
 
         var transacoes = transacaoRepository.findAllByDataTransacao(date, pageable);
 
-        List<TransacaoDTO> transacaoDTOs = new ArrayList<>();
+        List<TransacaoDTO> transacaoDTOList = new ArrayList<>();
 
-        transacoes.stream().forEach(item -> transacaoDTOs.add(new TransacaoDTO(
+        transacoes.stream().forEach(item -> transacaoDTOList.add(new TransacaoDTO(
                 item.getIdTransacao(),
                 item.getDataTransacao(),
                 item.getTipoTransacao(),
                 item.getValor(),
                 new ClienteDTO(item.getCliente().getIdCliente(), item.getCliente().getNome()))));
 
-        return new PageImpl<>(transacaoDTOs);
+        return new PageImpl<>(transacaoDTOList);
     }
 
 }

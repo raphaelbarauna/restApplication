@@ -17,9 +17,11 @@ import javax.validation.Valid;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Map;
+import io.swagger.annotations.Api;
 
 @RestController
 @RequestMapping("/clientes")
+@Api(value = "Cliente")
 public class ClienteController {
 
 
