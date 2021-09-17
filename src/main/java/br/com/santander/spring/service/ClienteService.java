@@ -1,5 +1,7 @@
 package br.com.santander.spring.service;
 
+import br.com.santander.spring.exception.ClienteNotFoundException;
+import br.com.santander.spring.exception.NoDataFoundException;
 import br.com.santander.spring.exception.ServiceException;
 import br.com.santander.spring.model.Cliente;
 import br.com.santander.spring.model.Transacao;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -37,8 +40,12 @@ public class ClienteService {
     private double taxaSaqueAlto;
 
     public Page<Cliente> listarClientes(Pageable pageable) {
+        Page<Cliente> clientePage = clienteRepository.findAll(pageable);
 
-        return clienteRepository.findAll(pageable);
+        if(!clientePage.hasContent())
+            throw new NoDataFoundException("Nao foi encontrado nenhum cliente.");
+
+        return clientePage;
 
     }
 
@@ -48,38 +55,46 @@ public class ClienteService {
 
     }
 
-    public Optional<Cliente> buscarPorId(Integer id) {
+    public Cliente buscarPorId(Integer id) {
 
-        return clienteRepository.findById(id);
+        return clienteRepository.findById(id).orElseThrow(() -> new ClienteNotFoundException("Não foi encontrar o cliente com o id = " + id));
 
     }
 
     public Cliente sacarValor(Cliente cliente, Double valorSaque) {
 
-        var taxa = 0.0;
+        try{
 
-        if ((cliente.getSaldo() - valorSaque) < 0) {
-            log.info("Nao tem saldo suficiente");
-            throw new ServiceException("Saldo insuficiente.");
+            var taxa = 0.0;
+
+            if ((cliente.getSaldo() - valorSaque) < 0) {
+                log.info("Nao tem saldo suficiente");
+                throw new ServiceException("Saldo insuficiente.");
+            }
+
+            if (valorSaque <= 100.00 || Boolean.TRUE.equals(cliente.getExclusivePlan()))
+                cliente.setSaldo(cliente.getSaldo() - valorSaque);
+
+
+            if (valorSaque > 100.00 && valorSaque <= 300.00 && Boolean.TRUE.equals(!cliente.getExclusivePlan())) {
+                taxa = valorSaque * (taxaSaqueBaixo / 100.0);
+                cliente.setSaldo(cliente.getSaldo() - valorSaque - taxa);
+            }
+
+            if (valorSaque > 300 && Boolean.TRUE.equals(!cliente.getExclusivePlan())) {
+                taxa = valorSaque * (taxaSaqueAlto / 100.0);
+                cliente.setSaldo(cliente.getSaldo() - valorSaque - taxa);
+            }
+
+            transacaoRepository.save(new Transacao(new Date(), "SAQUE", valorSaque + taxa, cliente));
+
+            return clienteRepository.save(cliente);
+        } catch (Exception e){
+            log.error("Nao foi possivel sacar o valor." + e.getMessage());
         }
 
-        if (valorSaque <= 100.00 || cliente.getExclusivePlan())
-            cliente.setSaldo(cliente.getSaldo() - valorSaque);
+        return null;
 
-
-        if (valorSaque > 100.00 && valorSaque <= 300.00 && !cliente.getExclusivePlan()) {
-            taxa = valorSaque * (taxaSaqueBaixo / 100.0);
-            cliente.setSaldo(cliente.getSaldo() - valorSaque - taxa);
-        }
-
-        if (valorSaque > 300 && !cliente.getExclusivePlan()) {
-            taxa = valorSaque * (taxaSaqueAlto / 100.0);
-            cliente.setSaldo(cliente.getSaldo() - valorSaque - taxa);
-        }
-
-        transacaoRepository.save(new Transacao(new Date(), "SAQUE", valorSaque + taxa, cliente));
-
-        return clienteRepository.save(cliente);
     }
 
     public Cliente depositarValor(Cliente cliente, Double valorDeposito) {
@@ -93,18 +108,24 @@ public class ClienteService {
 
     public Page<TransacaoDTO> listarTransacoesPorData(Date date, Pageable pageable) {
 
-        var transacoes = transacaoRepository.findAllByDataTransacao(date, pageable);
+        try{
+            var transacoes = transacaoRepository.findAllByDataTransacao(date, pageable);
 
-        List<TransacaoDTO> transacaoDTOList = new ArrayList<>();
+            List<TransacaoDTO> transacaoDTOList = new ArrayList<>();
 
-        transacoes.stream().forEach(item -> transacaoDTOList.add(new TransacaoDTO(
-                item.getIdTransacao(),
-                item.getDataTransacao(),
-                item.getTipoTransacao(),
-                item.getValor(),
-                new ClienteDTO(item.getCliente().getIdCliente(), item.getCliente().getNome()))));
+            transacoes.stream().forEach(item -> transacaoDTOList.add(new TransacaoDTO(
+                    item.getIdTransacao(),
+                    item.getDataTransacao(),
+                    item.getTipoTransacao(),
+                    item.getValor(),
+                    new ClienteDTO(item.getCliente().getIdCliente(), item.getCliente().getNome()))));
 
-        return new PageImpl<>(transacaoDTOList);
+            return new PageImpl<>(transacaoDTOList);
+
+        } catch (Exception e){
+            log.error( "Nao foi possivel listar as transacoes por data: " +  e.getMessage());
+        }
+        return new PageImpl<>(null);
     }
 
 }

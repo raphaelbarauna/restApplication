@@ -4,17 +4,11 @@ import br.com.santander.spring.model.Cliente;
 import br.com.santander.spring.model.Transacao;
 import br.com.santander.spring.repository.ClienteRepository;
 import br.com.santander.spring.repository.TransacaoRepository;
-
-import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -26,13 +20,13 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ClienteServiceTest {
+
+@ExtendWith(MockitoExtension.class)
+class ClienteServiceTest {
 
     @Mock
     private ClienteRepository clienteRepository;
@@ -66,7 +60,7 @@ public class ClienteServiceTest {
     }
 
     @Test
-    public void testarMetodoListarClientesPassandoPageable() {
+    void testarMetodoListarClientesPassandoPageable() {
 
         List<Cliente> clientes = new ArrayList<>();
         clientes.add(new Cliente(1, "Santander", true, 100.00, 2508202, new Date()));
@@ -78,22 +72,22 @@ public class ClienteServiceTest {
 
        when(clienteRepository.findAll(isA(Pageable.class))).thenReturn(clientePage);
 
-        assertEquals(clienteService.listarClientes(pageable).getContent().get(1).getNome(), "Capgemini");
+        assertEquals("Capgemini", clienteService.listarClientes(pageable).getContent().get(1).getNome());
 
     }
 
     @Test
-    public void testarMetodoSalvarCliente() {
+    void testarMetodoSalvarCliente() {
 
         var cliente = clienteBuilder();
 
         when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
 
-        assertEquals(clienteService.salvar(cliente).getNome(), "Santander");
+        assertEquals("Santander", clienteService.salvar(cliente).getNome());
     }
 
     @Test
-    public void testarMetodoBuscarPorId() {
+    void testarMetodoBuscarPorId() {
 
         var cliente = Optional.of(clienteBuilder());
 
@@ -103,7 +97,7 @@ public class ClienteServiceTest {
     }
 
     @Test
-    public void testarMetodoSacarValorPassandoClienteEValorMenorQueCem() throws ParseException {
+    void testarMetodoSacarValorPassandoClienteEValorMenorQueCem() throws ParseException {
 
         var cliente = clienteBuilder();
         var transacao = transacaoSaqueBuilder();
@@ -114,11 +108,11 @@ public class ClienteServiceTest {
 
         var clienteSalvo = clienteService.sacarValor(cliente, 90.00);
 
-        assertEquals(clienteSalvo.getSaldo(), 910.0);
+        assertEquals(910.0, clienteSalvo.getSaldo());
     }
 
     @Test
-    public void testarMetodoSacarValorPassandoClienteEValorBaixoSaque() throws ParseException {
+    void testarMetodoSacarValorPassandoClienteEValorBaixoSaque() throws ParseException {
 
         var cliente = clienteBuilder();
         var transacao = transacaoSaqueBuilder();
@@ -130,11 +124,11 @@ public class ClienteServiceTest {
 
         var clienteSalvo = clienteService.sacarValor(cliente, 200.00);
 
-        assertEquals(clienteSalvo.getSaldo(), 799.2);
+        assertEquals(799.2, clienteSalvo.getSaldo());
     }
 
     @Test
-    public void testarMetodoSacarValorPassandoClienteEValorAltoSaque() throws ParseException {
+    void testarMetodoSacarValorPassandoClienteEValorAltoSaque() throws ParseException {
 
         var cliente = clienteBuilder();
         var transacao = transacaoSaqueBuilder();
@@ -145,11 +139,11 @@ public class ClienteServiceTest {
         ReflectionTestUtils.setField(clienteService, "taxaSaqueAlto", 1.0);
         var clienteSalvo = clienteService.sacarValor(cliente, 400.00);
 
-        assertEquals(clienteSalvo.getSaldo(), 596.0);
+        assertEquals(596.0, clienteSalvo.getSaldo());
     }
 
     @Test
-    public void testarMetodoDepositarValorPassandoClienteEValorDeposito() throws ParseException {
+    void testarMetodoDepositarValorPassandoClienteEValorDeposito() throws ParseException {
 
         var cliente = clienteBuilder();
         var transacao = transacaoDepositoBuilder();
@@ -159,11 +153,11 @@ public class ClienteServiceTest {
 
         var clienteSalvo = clienteService.depositarValor(cliente, 400.00);
 
-        assertEquals(clienteSalvo.getSaldo(), 1400.0);
+        assertEquals(1400.0, clienteSalvo.getSaldo());
     }
 
     @Test
-    public void testarMetodolistarTransacoesPorData() throws ParseException {
+    void testarMetodolistarTransacoesPorData() throws ParseException {
 
         List<Transacao> transacoes = new ArrayList<>();
         transacoes.add(transacaoSaqueBuilder());
@@ -179,7 +173,7 @@ public class ClienteServiceTest {
 
         var transacoesDTO = clienteService.listarTransacoesPorData(data, pageable);
 
-        assertTrue(transacoesDTO.getContent().get(0).getTipoTransacao().equals("SAQUE"));
+        assertEquals(transacoesDTO.getContent().get(0).getTipoTransacao(), "SAQUE");
     }
 
 }
